@@ -18,6 +18,7 @@ public class Equation extends javax.swing.JFrame {
     public Equation() {
         initComponents();
         setLocationRelativeTo(null);
+        txtResult.setEditable(false);
     }
 
     public boolean checkNull() {
@@ -44,12 +45,56 @@ public class Equation extends javax.swing.JFrame {
 
     public void solve() {
         if (checkNull()) {
-            float numA = Float.parseFloat(txtA.getText());
-            float numB = Float.parseFloat(txtB.getText());
-            float numC = Float.parseFloat(txtC.getText());
+            try {
+                float numA = Float.parseFloat(txtA.getText());
+                float numB = Float.parseFloat(txtB.getText());
+                float numC = Float.parseFloat(txtC.getText());
+                float result;
+                if (numA == 0) {
+                    if (numB == 0) {
+                        if (numC == 0) {
+                            txtResult.setText("The equation has infinitely many solutions");
+                            return;
+                        } else {
+                            txtResult.setText("The equation has no solutions");
+                            return;
+                        }
+                    } else {
+                        result = -(numC / numB);
 
-                
+                        txtResult.setText("x = " + result);
+                        return;
+                    }
+                } else {
+                    float delta = (float) (Math.pow(numB, 2) - 4 * numA * numC);
+                    if (delta < 0) {
+                        txtResult.setText("The equation has no solutions");
+                        return;
+                    } else if (delta == 0) {
+                        result = -numB / (2 * numA);
+
+                        txtResult.setText("x = " + result);
+                        return;
+                    } else {
+                        float result1 = (float) ((-numB + Math.sqrt(delta)) / (2 * numA));
+                        float result2 = (float) ((-numB - Math.sqrt(delta)) / (2 * numA));
+
+                        txtResult.setText("x = " + result1 + "\nx = " + result2);
+                        return;
+                    }
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Please input a number");
+                clear();
+            }
         }
+    }
+
+    public void clear() {
+        txtA.setText(null);
+        txtB.setText(null);
+        txtC.setText(null);
+        txtResult.setText(null);
     }
 
     /**
@@ -71,7 +116,8 @@ public class Equation extends javax.swing.JFrame {
         btnSolve = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
-        txtResult = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtResult = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -84,10 +130,24 @@ public class Equation extends javax.swing.JFrame {
         jLabel4.setText("c");
 
         btnSolve.setText("Giải");
+        btnSolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSolveActionPerformed(evt);
+            }
+        });
 
         btnDelete.setText("Xoá");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         jLabel5.setText("Kết quả");
+
+        txtResult.setColumns(20);
+        txtResult.setRows(5);
+        jScrollPane1.setViewportView(txtResult);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -97,7 +157,7 @@ public class Equation extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(50, 50, 50)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(btnSolve)
                                 .addGap(18, 18, 18)
@@ -110,8 +170,7 @@ public class Equation extends javax.swing.JFrame {
                                 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                     .addGap(90, 90, 90)
                                     .addComponent(txtB, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addComponent(jLabel5)
-                            .addComponent(txtResult)))
+                            .addComponent(jLabel5)))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(89, 89, 89)
                         .addComponent(jLabel1))
@@ -120,8 +179,11 @@ public class Equation extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel3)
                             .addComponent(jLabel2)
-                            .addComponent(jLabel4))))
-                .addContainerGap(65, Short.MAX_VALUE))
+                            .addComponent(jLabel4)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 213, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(30, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -146,13 +208,21 @@ public class Equation extends javax.swing.JFrame {
                     .addComponent(btnDelete))
                 .addGap(18, 18, 18)
                 .addComponent(jLabel5)
-                .addGap(18, 18, 18)
-                .addComponent(txtResult, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(32, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(24, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSolveActionPerformed
+        solve();
+    }//GEN-LAST:event_btnSolveActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        clear();
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
     /**
      * @param args the command line arguments
@@ -197,9 +267,10 @@ public class Equation extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField txtA;
     private javax.swing.JTextField txtB;
     private javax.swing.JTextField txtC;
-    private javax.swing.JTextField txtResult;
+    private javax.swing.JTextArea txtResult;
     // End of variables declaration//GEN-END:variables
 }
