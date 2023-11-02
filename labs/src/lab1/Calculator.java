@@ -42,7 +42,7 @@ public class Calculator extends javax.swing.JFrame {
             try {
                 txtResult.setText(String.valueOf(Float.parseFloat(txtFirst.getText()) + Float.parseFloat(txtSecond.getText())));
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex);
+                JOptionPane.showMessageDialog(this, "Please input a number");
             }
         }
     }
@@ -52,7 +52,7 @@ public class Calculator extends javax.swing.JFrame {
             try {
                 txtResult.setText(String.valueOf(Float.parseFloat(txtFirst.getText()) - Float.parseFloat(txtSecond.getText())));
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex);
+                JOptionPane.showMessageDialog(this, "Please input a number");
             }
         }
     }
@@ -62,7 +62,7 @@ public class Calculator extends javax.swing.JFrame {
             try {
                 txtResult.setText(String.valueOf(Float.parseFloat(txtFirst.getText()) * Float.parseFloat(txtSecond.getText())));
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex);
+                JOptionPane.showMessageDialog(this, "Please input a number");
             }
         }
     }
@@ -77,7 +77,7 @@ public class Calculator extends javax.swing.JFrame {
             try {
                 txtResult.setText(String.valueOf(Float.parseFloat(txtFirst.getText()) / Float.parseFloat(txtSecond.getText())));
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, ex);
+                JOptionPane.showMessageDialog(this, "Please input a number");
             }
         }
     }
