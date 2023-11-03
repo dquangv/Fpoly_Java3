@@ -65,6 +65,9 @@ public class Calculator extends javax.swing.JFrame {
                 case "1/x":
                     result = 1 / secondNum;
                     break;
+                case "+/-":
+                    result = -secondNum;
+                    break;
                 default:
                     result = 0;
             }
@@ -565,7 +568,23 @@ public class Calculator extends javax.swing.JFrame {
     }//GEN-LAST:event_btn0ActionPerformed
 
     private void btnPositiveNegativeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPositiveNegativeActionPerformed
-        // TODO add your handling code here:
+        try {
+            if (flagCalculate && operator != "=") {
+                calculate();
+            }
+
+            flagAfterCal = false;
+
+            firstNum = Float.parseFloat(lblResult.getText());
+            operator = "+/-";
+
+            flagClear = true;
+
+            flagCalculate = true;
+            lblOperator.setText(operator);
+        } catch (Exception ex) {
+            lblResult.setText("");
+        }
     }//GEN-LAST:event_btnPositiveNegativeActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
