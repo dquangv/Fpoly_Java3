@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package Form;
+package View;
 
 /**
  *
@@ -15,6 +15,7 @@ public class StudentMarkManagement extends javax.swing.JFrame {
      */
     public StudentMarkManagement() {
         initComponents();
+        setLocationRelativeTo(null);
     }
 
     /**
@@ -109,6 +110,7 @@ public class StudentMarkManagement extends javax.swing.JFrame {
         jLabel8.setText("Giáo dục TC:");
 
         jTextField2.setBackground(new java.awt.Color(255, 255, 255));
+        jTextField2.setForeground(new java.awt.Color(0, 51, 255));
 
         jTextField3.setBackground(new java.awt.Color(255, 255, 255));
 
@@ -316,7 +318,7 @@ public class StudentMarkManagement extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
+                if ("Windows".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }

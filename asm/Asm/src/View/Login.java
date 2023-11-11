@@ -2,7 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package Form;
+package View;
+
+import Model.UserDAO;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -18,6 +21,46 @@ public class Login extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }
 
+    public boolean checkNull() {
+        if (txtUsername.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên đăng nhập");
+            txtUsername.requestFocus();
+            return false;
+        }
+
+        if (new String(txtPassword.getPassword()).isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu");
+            txtPassword.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    public void login() {
+        if (checkNull()) {
+            String username = txtUsername.getText();
+            String password = new String(txtPassword.getPassword());
+            UserDAO userDAO = new UserDAO();
+
+            if (userDAO.checkLogin(username, password) == null) {
+                JOptionPane.showMessageDialog(this, "Login failed");
+            } else if (userDAO.checkLogin(username, password).equals("CanBo")) {
+                JOptionPane.showMessageDialog(this, "Login successfully!");
+                StudentManagement stdManage = new StudentManagement();
+
+                stdManage.setVisible(true);
+                this.dispose();
+            } else if (userDAO.checkLogin(username, password).equals("GiangVien")) {
+                JOptionPane.showMessageDialog(this, "Login successfully!");
+                StudentMarkManagement markManage = new StudentMarkManagement();
+
+                markManage.setVisible(true);
+                this.dispose();
+            }
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -30,10 +73,10 @@ public class Login extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
-        jPasswordField1 = new javax.swing.JPasswordField();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        txtUsername = new javax.swing.JTextField();
+        txtPassword = new javax.swing.JPasswordField();
+        btnLogin = new javax.swing.JButton();
+        btnCancel = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -43,15 +86,20 @@ public class Login extends javax.swing.JFrame {
 
         jLabel2.setText("Password:");
 
-        jTextField1.setBackground(new java.awt.Color(255, 255, 255));
-        jTextField1.setForeground(new java.awt.Color(0, 0, 0));
+        txtUsername.setBackground(new java.awt.Color(255, 255, 255));
+        txtUsername.setForeground(new java.awt.Color(0, 0, 0));
 
-        jPasswordField1.setBackground(new java.awt.Color(255, 255, 255));
-        jPasswordField1.setForeground(new java.awt.Color(0, 0, 0));
+        txtPassword.setBackground(new java.awt.Color(255, 255, 255));
+        txtPassword.setForeground(new java.awt.Color(0, 0, 0));
 
-        jButton1.setText("Login");
+        btnLogin.setText("Login");
+        btnLogin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLoginActionPerformed(evt);
+            }
+        });
 
-        jButton2.setText("Cancel");
+        btnCancel.setText("Cancel");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -65,12 +113,12 @@ public class Login extends javax.swing.JFrame {
                 .addGap(39, 39, 39)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(btnLogin)
                         .addGap(18, 18, 18)
-                        .addComponent(jButton2))
+                        .addComponent(btnCancel))
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jTextField1)
-                        .addComponent(jPasswordField1, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)))
+                        .addComponent(txtUsername)
+                        .addComponent(txtPassword, javax.swing.GroupLayout.DEFAULT_SIZE, 199, Short.MAX_VALUE)))
                 .addContainerGap(15, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -79,15 +127,15 @@ public class Login extends javax.swing.JFrame {
                 .addGap(30, 30, 30)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2))
+                    .addComponent(btnLogin)
+                    .addComponent(btnCancel))
                 .addContainerGap(18, Short.MAX_VALUE))
         );
 
@@ -110,6 +158,10 @@ public class Login extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
+        login();
+    }//GEN-LAST:event_btnLoginActionPerformed
 
     /**
      * @param args the command line arguments
@@ -147,12 +199,12 @@ public class Login extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton btnCancel;
+    private javax.swing.JButton btnLogin;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPasswordField jPasswordField1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JPasswordField txtPassword;
+    private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }
