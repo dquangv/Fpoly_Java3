@@ -4,9 +4,12 @@
  */
 package View;
 
+import Model.Student;
+import Model.StudentDAO;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -15,12 +18,19 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author Quang
  */
 public class StudentManagement extends javax.swing.JFrame {
+
+    StudentDAO stdDAO = new StudentDAO();
+    String pathImage = null, nameImage = null;
+    int index = -1;
+    DefaultTableModel tblModel;
+    List<Student> list = stdDAO.dsSV();
 
     /**
      * Creates new form StudentManagement
@@ -39,6 +49,8 @@ public class StudentManagement extends javax.swing.JFrame {
 
         if (photoDialog.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             File selectedFile = photoDialog.getSelectedFile();
+            pathImage = selectedFile.getAbsolutePath();
+            nameImage = selectedFile.getName();
 
             if (checkPhotoFile(selectedFile)) {
                 ImageIcon img = new ImageIcon(selectedFile.getAbsolutePath());
@@ -52,7 +64,6 @@ public class StudentManagement extends javax.swing.JFrame {
 //
 //                int scaleWidth = (int) (img.getIconWidth() * scale);
 //                int scaleHeight = (int) (img.getIconHeight() * scale);
-
                 Image scaledImg = img.getImage().getScaledInstance(labelWidth, labelHeight, Image.SCALE_SMOOTH);
                 ImageIcon imgIcon = new ImageIcon(scaledImg);
 
@@ -68,6 +79,139 @@ public class StudentManagement extends javax.swing.JFrame {
     public boolean checkPhotoFile(File file) {
         String path = file.getName().toLowerCase();
         return path.endsWith("jpg") || path.endsWith("jpeg") || path.endsWith("png");
+    }
+
+    public void clearForm() {
+        txtMaSV.setText(null);
+        txtHoTen.setText(null);
+        txtEmail.setText(null);
+        txtSDT.setText(null);
+        buttonGroup1.clearSelection();
+        txtDiaChi.setText(null);
+        lblHinh.setText("Thêm hình ảnh");
+        lblHinh.setIcon(null);
+    }
+
+    public boolean checkNull() {
+        if (txtMaSV.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã sinh viên");
+            txtMaSV.requestFocus();
+            return false;
+        }
+
+        if (txtHoTen.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập họ tên sinh viên");
+            txtHoTen.requestFocus();
+            return false;
+        }
+
+        if (txtEmail.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập email sinh viên");
+            txtEmail.requestFocus();
+            return false;
+        }
+
+        if (txtSDT.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại sinh viên");
+            txtSDT.requestFocus();
+            return false;
+        }
+
+        if (!rdoNam.isSelected() && !rdoNu.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn giới tính sinh viên");
+            return false;
+        }
+
+        if (txtDiaChi.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập địa chỉ sinh viên");
+            txtDiaChi.requestFocus();
+            return false;
+        }
+
+        if (lblHinh.getText() != null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng thêm hình sinh viên");
+            return false;
+        }
+
+        return true;
+    }
+
+    public Student setStudent() {
+        String maSV = txtMaSV.getText();
+        String hoTen = txtHoTen.getText();
+        String email = txtEmail.getText();
+        String sdt = txtSDT.getText();
+        String diaChi = txtDiaChi.getText();
+        String hinh = pathImage;
+        boolean gioiTinh = rdoNam.isSelected();
+        Student std = new Student(maSV, hoTen, email, sdt, diaChi, hinh, gioiTinh);
+
+        return std;
+    }
+
+    public void fillTable() {
+        tblModel = (DefaultTableModel) tblSinhVien.getModel();
+        tblModel.setRowCount(0);
+
+        for (Student std : list) {
+            String[] ls = list.get(index).getHinh().split("\\\\");
+            System.out.println(ls);
+            System.out.println(ls.length);
+            tblModel.addRow(new Object[]{std.getMaSV(), std.getHoTen(), std.getEmail(), std.getSdt(), std.isGioiTinh() ? "Nam" : "Nữ", std.getDiaChi(), ls[ls.length - 1]});
+        }
+    }
+
+    public void saveStudent() {
+        if (checkNull()) {
+            if (!txtHoTen.getText().matches("[a-zA-Z\\p{L}]+([\\s+a-zA-Z\\p{L}])*")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng không nhập số hay ký tự đặc biệt");
+                txtHoTen.requestFocus();
+                return;
+            }
+
+            if (!txtEmail.getText().matches("\\w+@fpt.edu.vn")) {
+                JOptionPane.showMessageDialog(this, "Hệ thống chỉ nhận email của fpt");
+                txtEmail.requestFocus();
+                return;
+            }
+
+            if (!txtSDT.getText().matches("09\\d{8}")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng kiểu số điện thoại 09... (10 chữ số)");
+                txtSDT.requestFocus();
+                return;
+            }
+
+            Student std = setStudent();
+
+            if (stdDAO.themSV(std) > 0) {
+                JOptionPane.showMessageDialog(this, "Lưu thành công");
+                fillTable();
+            }
+        }
+    }
+
+    public void showDetail() {
+        index = tblSinhVien.getSelectedRow();
+
+        txtMaSV.setText(list.get(index).getMaSV());
+        txtHoTen.setText(list.get(index).getHoTen());
+        txtEmail.setText(list.get(index).getEmail());
+        txtSDT.setText(list.get(index).getSdt());
+
+        if (list.get(index).isGioiTinh()) {
+            rdoNam.setSelected(true);
+        } else {
+            rdoNu.setSelected(true);
+        }
+
+        txtDiaChi.setText(list.get(index).getDiaChi());
+        lblHinh.setText(null);
+        lblHinh.setIcon(new ImageIcon(new ImageIcon(list.get(index).getHinh()).getImage().getScaledInstance(lblHinh.getWidth(), lblHinh.getHeight(), 0)));
+    }
+
+    public void selectStudent() {
+        tblSinhVien.setRowSelectionInterval(index, index);
+        showDetail();
     }
 
     /**
@@ -161,10 +305,20 @@ public class StudentManagement extends javax.swing.JFrame {
         btnNew.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\add.png")); // NOI18N
         btnNew.setText("New");
         btnNew.setPreferredSize(new java.awt.Dimension(99, 39));
+        btnNew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNewActionPerformed(evt);
+            }
+        });
 
         btnSave.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\save.png")); // NOI18N
         btnSave.setText("Save");
         btnSave.setPreferredSize(new java.awt.Dimension(99, 39));
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
 
         btnDelete.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\delete.png")); // NOI18N
         btnDelete.setText("Delete");
@@ -191,6 +345,11 @@ public class StudentManagement extends javax.swing.JFrame {
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        tblSinhVien.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblSinhVienMouseClicked(evt);
             }
         });
         jScrollPane2.setViewportView(tblSinhVien);
@@ -306,6 +465,18 @@ public class StudentManagement extends javax.swing.JFrame {
     private void lblHinhMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblHinhMouseClicked
         addPhoto();
     }//GEN-LAST:event_lblHinhMouseClicked
+
+    private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
+        clearForm();
+    }//GEN-LAST:event_btnNewActionPerformed
+
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        saveStudent();
+    }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void tblSinhVienMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSinhVienMouseClicked
+        selectStudent();
+    }//GEN-LAST:event_tblSinhVienMouseClicked
 
     /**
      * @param args the command line arguments
