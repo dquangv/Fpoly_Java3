@@ -54,11 +54,7 @@ public class Table extends javax.swing.JFrame {
 
     public void themSP() {
         if (checkNull()) {
-            if (!txtTenSP.getText().matches("[a-zA-Z\\p{L}]+([\\s+a-zA-Z\\p{L}])*")) {
-                JOptionPane.showMessageDialog(this, "Ten san pham khong chua ki tu so va ki tu dac biet");
-                txtTenSP.requestFocus();
-                return;
-            }
+            
             if (txtDonGia.getText().matches("-\\d+")) {
                 JOptionPane.showMessageDialog(this, "Don gia khong duoc la so am");
                 txtDonGia.requestFocus();
