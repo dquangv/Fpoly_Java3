@@ -7,6 +7,7 @@ package lab5;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -25,11 +26,10 @@ public class Lab5Bai2 extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         loadDataToArrayList();
-        displayFirst();
-        System.out.println(list.get(index).isGioiTinh());
+        display(index);
     }
 
-    public void displayFirst() {
+    public void display(int index) {
         Student sv = list.get(index);
 
         txtMaSV.setText(sv.getMaSV());
@@ -56,6 +56,225 @@ public class Lab5Bai2 extends javax.swing.JFrame {
             }
         } catch (Exception ex) {
             System.out.println(ex);
+        }
+    }
+
+    public void previousStudent() {
+        if (index == 0) {
+            JOptionPane.showMessageDialog(this, "Đang ở đầu danh sách");
+            return;
+        }
+
+        index -= 1;
+        display(index);
+    }
+
+    public void nextStudent() {
+        if (index == list.size() - 1) {
+            JOptionPane.showMessageDialog(this, "Đang ở cuối danh sách");
+            return;
+        }
+
+        index += 1;
+        display(index);
+    }
+
+    public void deleteStudent() {
+        if (validateInfo()) {
+            if (txtMaSV.getText().equals("")) {
+                JOptionPane.showMessageDialog(this, "Nhập mã sinh viên để xoá");
+                return;
+            }
+
+            try {
+                Connection con = DriverManager.getConnection(url);
+                String sql = "delete from students where masv = ?";
+                PreparedStatement stm = con.prepareStatement(sql);
+                stm.setString(1, txtMaSV.getText());
+                int rowEffect = stm.executeUpdate();
+
+                if (rowEffect == 0) {
+                    JOptionPane.showMessageDialog(this, "Không tồn tại mã sinh viên này trong danh sách");
+                    return;
+                }
+
+                JOptionPane.showMessageDialog(this, "Đã xoá");
+                con.close();
+
+                if (list.size() > 1) {
+                    for (int i = 0; i < list.size(); i++) {
+                        if (list.get(i).getMaSV().equals(txtMaSV.getText())) {
+                            list.remove(list.get(i));
+                            System.out.println("c");
+                            System.out.println(i);
+                            if (i == 0) {
+                                index = i;
+                                display(index);
+                            } else {
+                                index = i - 1;
+                                display(index);
+                            }
+                        }
+                        System.out.println(list.get(i).getMaSV());
+                        System.out.println(txtMaSV.getText());
+                    }
+                } else {
+                    if (list.get(0).getMaSV().equals(txtMaSV.getText())) {
+                        list.remove(list.get(0));
+                        newStudent();
+                    }
+                }
+            } catch (Exception ex) {
+            }
+        }
+    }
+
+    public void newStudent() {
+        txtMaSV.setText(null);
+        txtHoTen.setText(null);
+        txtEmail.setText(null);
+        txtSoDT.setText(null);
+        buttonGroup1.clearSelection();
+        txtDiaChi.setText(null);
+        txtMaSV.requestFocus();
+    }
+
+    public void updateStudent() {
+        if (validateInfo()) {
+            if (txtMaSV.getText().equals("")) {
+                JOptionPane.showMessageDialog(this, "Nhập mã sinh viên để cập nhật");
+                return;
+
+            }
+
+            try {
+                Connection con = DriverManager.getConnection(url);
+                String sql = "update students set hoten = ?, email = ?, sodt = ?, gioitinh = ?, diachi = ? where masv = ?;";
+                PreparedStatement stm = con.prepareStatement(sql);
+                stm.setString(1, txtHoTen.getText());
+                stm.setString(2, txtEmail.getText());
+                stm.setString(3, txtSoDT.getText());
+                stm.setInt(4, rdoNam.isSelected() ? 0 : 1);
+                stm.setString(5, txtDiaChi.getText());
+                stm.setString(6, txtMaSV.getText());
+
+                int rowEffect = stm.executeUpdate();
+                if (rowEffect == 0) {
+                    JOptionPane.showMessageDialog(this, "Không tồn tại mã sinh viên này trong danh sách");
+                    return;
+                }
+
+                JOptionPane.showMessageDialog(this, "Đã cập nhật");
+                con.close();
+
+                for (int i = 0; i < list.size() - 1; i++) {
+                    if (list.get(i).getMaSV().equals(txtMaSV.getText())) {
+                        list.get(i).setHoTen(txtHoTen.getText());
+                        list.get(i).setEmail(txtEmail.getText());
+                        list.get(i).setSoDT(txtSoDT.getText());
+                        list.get(i).setGioiTinh(rdoNam.isSelected() ? false : true);
+                    }
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, ex);
+            }
+        }
+    }
+
+    public boolean checkNull() {
+        if (txtMaSV.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng không để trống mã sinh viên");
+            txtMaSV.requestFocus();
+            return false;
+        }
+        if (txtHoTen.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng không để trống họ tên sinh viên");
+            txtHoTen.requestFocus();
+            return false;
+        }
+        if (txtEmail.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng không để trống email sinh viên");
+            txtEmail.requestFocus();
+            return false;
+        }
+        if (txtSoDT.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng không để trống số điện thoại sinh viên");
+            txtSoDT.requestFocus();
+            return false;
+        }
+
+        if (!rdoNam.isSelected() && !rdoNu.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn giới tính cho sinh viên");
+            return false;
+        }
+
+        if (txtDiaChi.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng không để trống địa chỉ sinh viên");
+            txtDiaChi.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean validateInfo() {
+        if (checkNull()) {
+
+            if (!txtHoTen.getText().matches("[a-zA-Z\\p{L}]+([\\s+a-zA-Z\\p{L}])*")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng không nhập ký tự số và ký tự đặc biệt");
+                txtHoTen.requestFocus();
+                return false;
+            }
+
+            if (!txtEmail.getText().matches("\\w+@\\w+(\\.\\w+)+")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng email (***@***.***)");
+                txtEmail.requestFocus();
+                return false;
+            }
+
+            if (!txtSoDT.getText().matches("\\d{10}")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số điện thoại (09*** - 10 chữ số)");
+                txtSoDT.requestFocus();
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public void addStudent() {
+        if (validateInfo()) {
+            for (Student std : list) {
+                if (std.getMaSV().equals(txtMaSV.getText())) {
+                    JOptionPane.showMessageDialog(this, "Mã sinh viên này đã tồn tại");
+                    txtMaSV.requestFocus();
+                    return;
+                }
+            }
+
+            try {
+                Connection con = DriverManager.getConnection(url);
+                String sql = "insert into students values (?, ?, ?, ?, ?, ?);";
+                PreparedStatement stm = con.prepareStatement(sql);
+                stm.setString(1, txtMaSV.getText());
+                stm.setString(2, txtHoTen.getText());
+                stm.setString(3, txtEmail.getText());
+                stm.setString(4, txtSoDT.getText());
+                stm.setInt(5, rdoNam.isSelected() ? 0 : 1);
+                stm.setString(6, txtDiaChi.getText());
+                stm.execute();
+
+                con.close();
+                list.add(new Student(txtMaSV.getText(), txtHoTen.getText(), txtEmail.getText(), txtSoDT.getText(), txtDiaChi.getText(), !rdoNam.isSelected()));
+
+                index = list.size() - 1;
+                System.out.println("b");
+                System.out.println(list.size());
+                JOptionPane.showMessageDialog(this, "Đã thêm");
+            } catch (Exception ex) {
+            }
         }
     }
 
@@ -123,23 +342,63 @@ public class Lab5Bai2 extends javax.swing.JFrame {
 
         btnAdd.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\add.png")); // NOI18N
         btnAdd.setText("Add");
+        btnAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddActionPerformed(evt);
+            }
+        });
 
         btnDelete.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\delete.png")); // NOI18N
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnUpdate.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\edit.png")); // NOI18N
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         btnSave.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\save.png")); // NOI18N
         btnSave.setText("Save");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
 
         btnFirst.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\rewind.png")); // NOI18N
+        btnFirst.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFirstActionPerformed(evt);
+            }
+        });
 
         btnPrevious.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\previous.png")); // NOI18N
+        btnPrevious.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPreviousActionPerformed(evt);
+            }
+        });
 
         btnNext.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\next.png")); // NOI18N
+        btnNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextActionPerformed(evt);
+            }
+        });
 
         btnLast.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\fast_forward.png")); // NOI18N
+        btnLast.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLastActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -255,6 +514,40 @@ public class Lab5Bai2 extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFirstActionPerformed
+        index = 0;
+        display(index);
+    }//GEN-LAST:event_btnFirstActionPerformed
+
+    private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
+        previousStudent();
+    }//GEN-LAST:event_btnPreviousActionPerformed
+
+    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        nextStudent();
+    }//GEN-LAST:event_btnNextActionPerformed
+
+    private void btnLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLastActionPerformed
+        index = list.size() - 1;
+        display(index);
+    }//GEN-LAST:event_btnLastActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        deleteStudent();
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        newStudent();
+    }//GEN-LAST:event_btnAddActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        updateStudent();
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        addStudent();
+    }//GEN-LAST:event_btnSaveActionPerformed
 
     /**
      * @param args the command line arguments
