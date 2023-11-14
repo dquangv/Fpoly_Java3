@@ -19,7 +19,8 @@ public class BookInformation extends javax.swing.JFrame {
     String header[] = {"Id", "Title", "Price"};
     DefaultTableModel tblModel = new DefaultTableModel(header, 0);
     String url = "jdbc:sqlserver://localhost:1433;databaseName=Java3_Lab6_PS36680;username=sa;password=123;encrypt=false;";
-
+    int index = -1;
+    
     /**
      * Creates new form BookInformation
      */
@@ -88,6 +89,42 @@ public class BookInformation extends javax.swing.JFrame {
             System.out.println(ex);
         }
     }
+    
+    public void selectBook() {
+        index = tblBook.getSelectedRow();
+        btnDelete.setEnabled(true);
+    }
+    
+    public void deleteBook() {
+        int confirm = JOptionPane.showConfirmDialog(this, "Chắc chắn xoá?", "Xác nhận", JOptionPane.YES_NO_CANCEL_OPTION);
+        
+        if (confirm != JOptionPane.YES_NO_OPTION) {
+            return;
+        }
+        
+        try {
+            Connection con = getConnection(url);
+            String sql = "delete from books where id = ?;";
+            PreparedStatement stm = con.prepareStatement(sql);
+            stm.setInt(1, (int) tblModel.getValueAt(index, 0));
+            stm.execute();
+            
+            int rowEffect = stm.executeUpdate();
+            
+            if (rowEffect != 0) {
+                JOptionPane.showMessageDialog(this, "Đã xoá");
+            }
+            
+            stm.close();
+            con.close();
+            
+            fillTalbe();
+            
+            index = -1;
+            btnDelete.setEnabled(false);
+        } catch (Exception ex) {
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -140,6 +177,11 @@ public class BookInformation extends javax.swing.JFrame {
         );
 
         btnExit.setText("Exit");
+        btnExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExitActionPerformed(evt);
+            }
+        });
 
         btnSearch.setText("Search");
         btnSearch.addActionListener(new java.awt.event.ActionListener() {
@@ -161,9 +203,19 @@ public class BookInformation extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tblBook.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblBookMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblBook);
 
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -211,6 +263,18 @@ public class BookInformation extends javax.swing.JFrame {
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         searchBook();
     }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void tblBookMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblBookMouseClicked
+        selectBook();
+    }//GEN-LAST:event_tblBookMouseClicked
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        deleteBook();
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExitActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_btnExitActionPerformed
 
     /**
      * @param args the command line arguments
