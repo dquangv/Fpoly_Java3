@@ -85,6 +85,7 @@ public class BookInformation extends javax.swing.JFrame {
             while (rs.next()) {
                 tblModel.addRow(new Object[]{rs.getInt(1), rs.getString(2), rs.getFloat(3)});
             }
+            
         } catch (Exception ex) {
             System.out.println(ex);
         }
