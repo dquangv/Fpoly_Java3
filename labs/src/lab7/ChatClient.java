@@ -1,0 +1,322 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package lab7;
+
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
+
+/**
+ *
+ * @author Quang
+ */
+public class ChatClient extends javax.swing.JFrame {
+
+    Socket socket;
+//    DataOutputStream outputStream;
+//    DataInputStream inputStream;
+    String chat = "";
+
+    /**
+     * Creates new form ChatClient
+     */
+    public ChatClient() {
+        initComponents();
+        setLocationRelativeTo(null);
+        txtChat.setEditable(false);
+    }
+    
+    public void connectServer() {
+        try {
+            int port = Integer.parseInt(txtPort.getText());
+
+            socket = new Socket("localhost", port);
+
+            Thread t2 = new Thread(() -> {
+                try {
+                    DataInputStream clientInputStream = new DataInputStream(socket.getInputStream());
+                    while (true) {
+                        String receivedMessage = clientInputStream.readUTF();
+                        updateChat(receivedMessage);
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+            
+            t2.start();
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Vui long nhap so cong hop le", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void sendClientMess() {
+        try {
+            DataOutputStream clientOutputStream = new DataOutputStream(socket.getOutputStream());
+
+            String clientMessage = "Client: " + txtMess.getText();
+            updateChat(clientMessage);
+
+            clientOutputStream.writeUTF(clientMessage);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void updateChat(String message) {
+        chat += message + "\n";
+        txtChat.setText(chat);
+    }
+
+//    public void connectServer() {
+//        try {
+//            int port = Integer.parseInt(txtPort.getText());
+//            socket = new Socket("localhost", port);
+//            System.out.println("Da ket noi voi may chu");
+//
+//            Thread t2 = new Thread(() -> {
+//                try {
+//                    DataInputStream serverInputStream = new DataInputStream(socket.getInputStream());
+//                    while (true) {
+//                        String receivedMessage = serverInputStream.readUTF();
+//                        chat += receivedMessage + "\n";
+//                        txtChat.setText(chat);
+//                    }
+//                } catch (IOException ex) {
+//                    ex.printStackTrace();
+//                }
+//            });
+//
+//            t2.start();
+//        } catch (NumberFormatException ex) {
+//            JOptionPane.showMessageDialog(this, "Vui long nhap so cong hop le");
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//    }
+//
+//    public void sendMess() {
+//        try {
+//            outputStream = new DataOutputStream(socket.getOutputStream());
+//
+//            chat += "Client: " + txtMess.getText() + "\n";
+//
+//            txtChat.setText(chat);
+//            outputStream.writeUTF(chat);
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//    }
+//    class ClientThread implements Runnable {
+//
+//        Socket client;
+//        JTextArea txtServer;
+//        InputStream in;
+//        BufferedInputStream bi;
+//        DataInputStream dis;
+//        OutputStream out;
+//
+//        public ClientThread(Socket client, JTextArea txtServer) {
+//            this.client = client;
+//            this.txtServer = txtServer;
+//            try {
+//                in = client.getInputStream();
+//                bi = new BufferedInputStream(in);
+//                dis = new DataInputStream(bi);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        @Override
+//        public void run() {
+//            String s = "";
+//            while (true) {
+//                try {
+//                    s = dis.readLine();
+//                    txtServer.append(s + "\n\r");
+//                } catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//            }
+//        }
+//    }
+    
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jLabel1 = new javax.swing.JLabel();
+        txtPort = new javax.swing.JTextField();
+        btnConnect = new javax.swing.JButton();
+        txtMess = new javax.swing.JTextField();
+        btnSend = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        txtChat = new javax.swing.JTextArea();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Client");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
+
+        jLabel1.setText("Port No.");
+
+        txtPort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtPortActionPerformed(evt);
+            }
+        });
+
+        btnConnect.setText("Connect");
+        btnConnect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnConnectActionPerformed(evt);
+            }
+        });
+
+        btnSend.setText("Send");
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSendActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setText("Chat");
+
+        txtChat.setColumns(20);
+        txtChat.setRows(5);
+        jScrollPane1.setViewportView(txtChat);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(31, 31, 31)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane1)
+                    .addComponent(jLabel2)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtMess)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(32, 32, 32)
+                                .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(41, 41, 41)
+                                .addComponent(btnConnect)))
+                        .addGap(18, 18, 18)
+                        .addComponent(btnSend)))
+                .addContainerGap(31, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(30, 30, 30)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnConnect))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtMess, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSend))
+                .addGap(40, 40, 40)
+                .addComponent(jLabel2)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(29, Short.MAX_VALUE))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void txtPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPortActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtPortActionPerformed
+
+    private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
+        connectServer();
+    }//GEN-LAST:event_btnConnectActionPerformed
+
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
+        sendClientMess();
+    }//GEN-LAST:event_btnSendActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        try {
+            socket.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_formWindowClosing
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Windows".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(ChatClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(ChatClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(ChatClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(ChatClient.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new ChatClient().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnConnect;
+    private javax.swing.JButton btnSend;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea txtChat;
+    private javax.swing.JTextField txtMess;
+    private javax.swing.JTextField txtPort;
+    // End of variables declaration//GEN-END:variables
+}
