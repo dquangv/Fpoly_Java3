@@ -270,8 +270,7 @@ public class Lab5Bai2 extends javax.swing.JFrame {
                 list.add(new Student(txtMaSV.getText(), txtHoTen.getText(), txtEmail.getText(), txtSoDT.getText(), txtDiaChi.getText(), !rdoNam.isSelected()));
 
                 index = list.size() - 1;
-                System.out.println("b");
-                System.out.println(list.size());
+                
                 JOptionPane.showMessageDialog(this, "Đã thêm");
             } catch (Exception ex) {
             }
