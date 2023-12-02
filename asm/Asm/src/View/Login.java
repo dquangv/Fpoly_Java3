@@ -4,8 +4,9 @@
  */
 package View;
 
-import Model.UserDAO;
+import DAO.ConnectionDB;
 import javax.swing.JOptionPane;
+import java.sql.*;
 
 /**
  *
@@ -41,22 +42,50 @@ public class Login extends javax.swing.JFrame {
         if (checkNull()) {
             String username = txtUsername.getText();
             String password = new String(txtPassword.getPassword());
-            UserDAO userDAO = new UserDAO();
 
-            if (userDAO.checkLogin(username, password) == null) {
-                JOptionPane.showMessageDialog(this, "Login failed");
-            } else if (userDAO.checkLogin(username, password).equals("CanBo")) {
-                JOptionPane.showMessageDialog(this, "Login successfully!");
-                StudentManagement stdManage = new StudentManagement();
+            try {
+                ConnectionDB connection = new ConnectionDB();
+                Connection con = connection.getConnection();
+                String sql = "select * from users";
+                Statement stm = con.createStatement();
+                ResultSet rs = stm.executeQuery(sql);
 
-                stdManage.setVisible(true);
-                this.dispose();
-            } else if (userDAO.checkLogin(username, password).equals("GiangVien")) {
-                JOptionPane.showMessageDialog(this, "Login successfully!");
-                StudentMarkManagement markManage = new StudentMarkManagement();
+                while (rs.next()) {
+                    if (username.equals(rs.getString(1)) && password.equals(rs.getString(2))) {
 
-                markManage.setVisible(true);
-                this.dispose();
+                        JOptionPane.showMessageDialog(this, "Login Successfully!");
+
+                        if (rs.getString(3).equals("GiangVien")) {
+                            StudentMarkManagement markManagement = new StudentMarkManagement();
+
+                            markManagement.setVisible(true);
+                            this.dispose();
+                        } else if (rs.getString(3).equals("CanBo")) {
+                            StudentManagement stdManagement = new StudentManagement();
+                            
+                            stdManagement.setVisible(true);
+                            this.dispose();
+                        }
+                    } 
+                }
+
+//                if (userDAO.checkLogin(username, password) == null) {
+//                    JOptionPane.showMessageDialog(this, "Login failed");
+//                } else if (userDAO.checkLogin(username, password).equals("CanBo")) {
+//                    JOptionPane.showMessageDialog(this, "Login successfully!");
+//                    StudentManagement stdManage = new StudentManagement();
+//
+//                    stdManage.setVisible(true);
+//                    this.dispose();
+//                } else if (userDAO.checkLogin(username, password).equals("GiangVien")) {
+//                    JOptionPane.showMessageDialog(this, "Login successfully!");
+//                    StudentMarkManagement markManage = new StudentMarkManagement();
+//
+//                    markManage.setVisible(true);
+//                    this.dispose();
+//                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -100,6 +129,11 @@ public class Login extends javax.swing.JFrame {
         });
 
         btnCancel.setText("Cancel");
+        btnCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -162,6 +196,10 @@ public class Login extends javax.swing.JFrame {
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
         login();
     }//GEN-LAST:event_btnLoginActionPerformed
+
+    private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_btnCancelActionPerformed
 
     /**
      * @param args the command line arguments

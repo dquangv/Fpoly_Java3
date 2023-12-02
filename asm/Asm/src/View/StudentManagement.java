@@ -4,8 +4,8 @@
  */
 package View;
 
+import DAO.ConnectionDB;
 import Model.Student;
-import Model.StudentDAO;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +19,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import java.sql.*;
 
 /**
  *
@@ -26,11 +27,12 @@ import javax.swing.table.DefaultTableModel;
  */
 public class StudentManagement extends javax.swing.JFrame {
 
-    StudentDAO stdDAO = new StudentDAO();
+//    StudentDAO stdDAO = new StudentDAO();
     String pathImage = null, nameImage = null;
     int index = -1;
     DefaultTableModel tblModel;
-    List<Student> list = stdDAO.dsSV();
+    ConnectionDB connectionDB = new ConnectionDB();
+//    List<Student> list = stdDAO.dsSV();
 
     /**
      * Creates new form StudentManagement
@@ -153,12 +155,24 @@ public class StudentManagement extends javax.swing.JFrame {
         tblModel = (DefaultTableModel) tblSinhVien.getModel();
         tblModel.setRowCount(0);
 
-        for (Student std : list) {
-            String[] ls = list.get(index).getHinh().split("\\\\");
-            System.out.println(ls);
-            System.out.println(ls.length);
-            tblModel.addRow(new Object[]{std.getMaSV(), std.getHoTen(), std.getEmail(), std.getSdt(), std.isGioiTinh() ? "Nam" : "Nữ", std.getDiaChi(), ls[ls.length - 1]});
+        try {
+            Connection con = connectionDB.getConnection();
+            String sql = "select * from students";
+            Statement stm = con.createStatement();
+            ResultSet rs = stm.executeQuery(sql);
+
+            while (rs.next()) {
+                tblModel.addRow(new Object[]{rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getBoolean(5) ? "Nam" : "Nữ", rs.getString(6), rs.getString(7)});
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+//        for (Student std : list) {
+//            String[] ls = list.get(index).getHinh().split("\\\\");
+//            System.out.println(ls);
+//            System.out.println(ls.length);
+//            tblModel.addRow(new Object[]{std.getMaSV(), std.getHoTen(), std.getEmail(), std.getSdt(), std.isGioiTinh() ? "Nam" : "Nữ", std.getDiaChi(), ls[ls.length - 1]});
+//        }
     }
 
     public void saveStudent() {
@@ -183,34 +197,37 @@ public class StudentManagement extends javax.swing.JFrame {
 
             Student std = setStudent();
 
-            if (stdDAO.themSV(std) > 0) {
-                JOptionPane.showMessageDialog(this, "Lưu thành công");
-                fillTable();
-            }
+//            if (stdDAO.themSV(std) > 0) {
+//                JOptionPane.showMessageDialog(this, "Lưu thành công");
+//                fillTable();
+//            }
         }
     }
 
     public void showDetail() {
-        index = tblSinhVien.getSelectedRow();
+        txtMaSV.setText((String) tblModel.getValueAt(index, 0));
+        txtHoTen.setText((String) tblModel.getValueAt(index, 1));
+        txtEmail.setText((String) tblModel.getValueAt(index, 2));
+        txtSDT.setText((String) tblModel.getValueAt(index, 3));
 
-        txtMaSV.setText(list.get(index).getMaSV());
-        txtHoTen.setText(list.get(index).getHoTen());
-        txtEmail.setText(list.get(index).getEmail());
-        txtSDT.setText(list.get(index).getSdt());
-
-        if (list.get(index).isGioiTinh()) {
+        System.out.println((String) tblModel.getValueAt(index, 4));
+        
+        if (((String) tblModel.getValueAt(index, 4)).equals("Nam")) {
             rdoNam.setSelected(true);
         } else {
             rdoNu.setSelected(true);
         }
 
-        txtDiaChi.setText(list.get(index).getDiaChi());
+        txtDiaChi.setText((String) tblModel.getValueAt(index, 5));
         lblHinh.setText(null);
-        lblHinh.setIcon(new ImageIcon(new ImageIcon(list.get(index).getHinh()).getImage().getScaledInstance(lblHinh.getWidth(), lblHinh.getHeight(), 0)));
+        lblHinh.setIcon(new ImageIcon(new ImageIcon((String) tblModel.getValueAt(index, 6)).getImage().getScaledInstance(lblHinh.getWidth(), lblHinh.getHeight(), 0)));
     }
 
     public void selectStudent() {
+        index = tblSinhVien.getSelectedRow();
+
         tblSinhVien.setRowSelectionInterval(index, index);
+
         showDetail();
     }
 
@@ -248,6 +265,11 @@ public class StudentManagement extends javax.swing.JFrame {
         tblSinhVien = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(0, 51, 255));
@@ -477,6 +499,10 @@ public class StudentManagement extends javax.swing.JFrame {
     private void tblSinhVienMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblSinhVienMouseClicked
         selectStudent();
     }//GEN-LAST:event_tblSinhVienMouseClicked
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        fillTable();
+    }//GEN-LAST:event_formWindowOpened
 
     /**
      * @param args the command line arguments
