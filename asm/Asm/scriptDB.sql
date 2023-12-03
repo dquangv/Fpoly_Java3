@@ -23,12 +23,11 @@ primary key (masv));
 go
 
 create table grade (
-id int not null,
 masv nvarchar(50),
 tienganh int,
 tinhoc int,
 gdtc int,
-primary key (id));
+primary key (masv));
 go
 
 alter table grade
@@ -48,8 +47,12 @@ go
 
 insert into students values
 ('SV001', N'Vũ Đăng Quang', 'vdq@fpt.edu.vn', '0101010101', 1, '1 LTT', 'C:\Users\Quang\OneDrive - FPT Polytechnic\Desktop\img\bin\1.jpg'),
-('SV002', N'Trương Thị Minh Ngọc', 'ttmn@gmail.com', '0202020202', 0, '2 LTT', 'C:\Users\Quang\OneDrive - FPT Polytechnic\Desktop\img\bin\2.jpg');
+('SV002', N'Trương Thị Minh Ngọc', 'ttmn@fpt.edu.vn', '0202020202', 0, '2 LTT', 'C:\Users\Quang\OneDrive - FPT Polytechnic\Desktop\img\bin\2.jpg');
 go
 
 delete from students;
+go
+
+insert into grade values
+('SV001', 7, 9, 8);
 go

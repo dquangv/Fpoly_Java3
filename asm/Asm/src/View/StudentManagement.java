@@ -138,19 +138,18 @@ public class StudentManagement extends javax.swing.JFrame {
         return true;
     }
 
-    public Student setStudent() {
-        String maSV = txtMaSV.getText();
-        String hoTen = txtHoTen.getText();
-        String email = txtEmail.getText();
-        String sdt = txtSDT.getText();
-        String diaChi = txtDiaChi.getText();
-        String hinh = pathImage;
-        boolean gioiTinh = rdoNam.isSelected();
-        Student std = new Student(maSV, hoTen, email, sdt, diaChi, hinh, gioiTinh);
-
-        return std;
-    }
-
+//    public Student setStudent() {
+//        String maSV = txtMaSV.getText();
+//        String hoTen = txtHoTen.getText();
+//        String email = txtEmail.getText();
+//        String sdt = txtSDT.getText();
+//        String diaChi = txtDiaChi.getText();
+//        String hinh = pathImage;
+//        boolean gioiTinh = rdoNam.isSelected();
+//        Student std = new Student(maSV, hoTen, email, sdt, diaChi, hinh, gioiTinh);
+//
+//        return std;
+//    }
     public void fillTable() {
         tblModel = (DefaultTableModel) tblSinhVien.getModel();
         tblModel.setRowCount(0);
@@ -162,11 +161,13 @@ public class StudentManagement extends javax.swing.JFrame {
             ResultSet rs = stm.executeQuery(sql);
 
             while (rs.next()) {
-                tblModel.addRow(new Object[]{rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getBoolean(5) ? "Nam" : "Nữ", rs.getString(6), rs.getString(7)});
+                String[] listPathImg = rs.getString(7).split("\\\\");
+                tblModel.addRow(new Object[]{rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getBoolean(5) ? "Nam" : "Nữ", rs.getString(6), listPathImg[listPathImg.length - 1]});
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
 //        for (Student std : list) {
 //            String[] ls = list.get(index).getHinh().split("\\\\");
 //            System.out.println(ls);
@@ -176,51 +177,150 @@ public class StudentManagement extends javax.swing.JFrame {
     }
 
     public void saveStudent() {
+        String maSV = txtMaSV.getText();
+        String hoTen = txtHoTen.getText();
+        String email = txtEmail.getText();
+        String sdt = txtSDT.getText();
+        String diaChi = txtDiaChi.getText();
+        String hinh = pathImage;
+        boolean gioiTinh = rdoNam.isSelected();
+
         if (checkNull()) {
-            if (!txtHoTen.getText().matches("[a-zA-Z\\p{L}]+([\\s+a-zA-Z\\p{L}])*")) {
+            if (!hoTen.matches("[a-zA-Z\\p{L}]+([\\s+a-zA-Z\\p{L}])*")) {
                 JOptionPane.showMessageDialog(this, "Vui lòng không nhập số hay ký tự đặc biệt");
                 txtHoTen.requestFocus();
                 return;
             }
 
-            if (!txtEmail.getText().matches("\\w+@fpt.edu.vn")) {
+            if (!email.matches("\\w+@fpt.edu.vn")) {
                 JOptionPane.showMessageDialog(this, "Hệ thống chỉ nhận email của fpt");
                 txtEmail.requestFocus();
                 return;
             }
 
-            if (!txtSDT.getText().matches("09\\d{8}")) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng kiểu số điện thoại 09... (10 chữ số)");
+            if (!sdt.matches("\\d{10}")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng kiểu số điện thoại (10 chữ số)");
                 txtSDT.requestFocus();
                 return;
             }
 
-            Student std = setStudent();
-
+//            Student std = setStudent();
 //            if (stdDAO.themSV(std) > 0) {
 //                JOptionPane.showMessageDialog(this, "Lưu thành công");
 //                fillTable();
 //            }
+            if (!rdoNam.isSelected() && !rdoNu.isSelected()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn giới tính sinh viên");
+                return;
+            }
+
+            if (lblHinh.getIcon() == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn ảnh đại diện sinh viên");
+                return;
+            }
+
+            try {
+                Connection con = connectionDB.getConnection();
+                String sql = "select * from students where masv = ?";
+                PreparedStatement stm = con.prepareStatement(sql);
+
+                stm.setString(1, maSV);
+                ResultSet rs = stm.executeQuery();
+
+                if (rs.next()) {
+                    JOptionPane.showMessageDialog(this, "Mã sinh viên này đã tồn tại");
+                    txtMaSV.requestFocus();
+                    rs.close();
+                    stm.close();
+                    con.close();
+                    return;
+                } else {
+                    try {
+                        String sqlInsert = "insert into students values (?, ?, ?, ?, ?, ?, ?)";
+                        PreparedStatement stmInsert = con.prepareStatement(sqlInsert);
+
+                        stmInsert.setString(1, maSV);
+                        stmInsert.setString(2, hoTen);
+                        stmInsert.setString(3, email);
+                        stmInsert.setString(4, sdt);
+                        stmInsert.setByte(5, (byte) (gioiTinh ? 1 : 0));
+                        stmInsert.setString(6, diaChi);
+                        stmInsert.setString(7, hinh);
+
+                        int rowEffect = stmInsert.executeUpdate();
+
+                        if (rowEffect > 0) {
+                            JOptionPane.showMessageDialog(this, "Đã thêm sinh viên mới");
+                            fillTable();
+                            clearForm();
+                        }
+
+                        stmInsert.close();
+                        con.close();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     public void showDetail() {
-        txtMaSV.setText((String) tblModel.getValueAt(index, 0));
-        txtHoTen.setText((String) tblModel.getValueAt(index, 1));
-        txtEmail.setText((String) tblModel.getValueAt(index, 2));
-        txtSDT.setText((String) tblModel.getValueAt(index, 3));
+//        txtMaSV.setText((String) tblModel.getValueAt(index, 0));
+//        txtHoTen.setText((String) tblModel.getValueAt(index, 1));
+//        txtEmail.setText((String) tblModel.getValueAt(index, 2));
+//        txtSDT.setText((String) tblModel.getValueAt(index, 3));
+//
+//        System.out.println((String) tblModel.getValueAt(index, 4));
+//        
+//        if (((String) tblModel.getValueAt(index, 4)).equals("Nam")) {
+//            rdoNam.setSelected(true);
+//        } else {
+//            rdoNu.setSelected(true);
+//        }
+//
+//        txtDiaChi.setText((String) tblModel.getValueAt(index, 5));
+//        lblHinh.setText(null);
+//        lblHinh.setIcon(new ImageIcon(new ImageIcon((String) tblModel.getValueAt(index, 6)).getImage().getScaledInstance(lblHinh.getWidth(), lblHinh.getHeight(), 0)));
 
-        System.out.println((String) tblModel.getValueAt(index, 4));
-        
-        if (((String) tblModel.getValueAt(index, 4)).equals("Nam")) {
-            rdoNam.setSelected(true);
-        } else {
-            rdoNu.setSelected(true);
+        String selectedMaSV = (String) tblModel.getValueAt(index, 0);
+
+        try {
+            Connection con = connectionDB.getConnection();
+            String sql = "select * from students where masv = ?";
+            PreparedStatement stm = con.prepareStatement(sql);
+
+            stm.setString(1, selectedMaSV);
+            ResultSet rs = stm.executeQuery();
+
+            while (rs.next()) {
+                txtMaSV.setText(rs.getString(1));
+                txtHoTen.setText(rs.getString(2));
+                txtEmail.setText(rs.getString(3));
+                txtSDT.setText(rs.getString(4));
+
+                if (rs.getByte(5) == 1) {
+                    rdoNam.setSelected(true);
+                } else {
+                    rdoNu.setSelected(true);
+                }
+
+                txtDiaChi.setText(rs.getString(6));
+                lblHinh.setText(null);
+                lblHinh.setIcon(new ImageIcon(new ImageIcon(rs.getString(7)).getImage().getScaledInstance(lblHinh.getWidth(), lblHinh.getHeight(), 0)));
+            }
+
+            rs.close();
+            stm.close();
+            con.close();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
 
-        txtDiaChi.setText((String) tblModel.getValueAt(index, 5));
-        lblHinh.setText(null);
-        lblHinh.setIcon(new ImageIcon(new ImageIcon((String) tblModel.getValueAt(index, 6)).getImage().getScaledInstance(lblHinh.getWidth(), lblHinh.getHeight(), 0)));
     }
 
     public void selectStudent() {
@@ -229,6 +329,116 @@ public class StudentManagement extends javax.swing.JFrame {
         tblSinhVien.setRowSelectionInterval(index, index);
 
         showDetail();
+    }
+
+    public void deleteStudent() {
+        String maSV = txtMaSV.getText();
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xoá sinh viên này không?");
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                Connection con = connectionDB.getConnection();
+                String sql = "delete from students where masv = ?";
+                PreparedStatement stm = con.prepareStatement(sql);
+
+                stm.setString(1, maSV);
+
+                int rowEffect = stm.executeUpdate();
+
+                if (rowEffect <= 0) {
+                    JOptionPane.showMessageDialog(this, "Mã sinh viên không tồn tại");
+                    txtMaSV.requestFocus();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Đã xoá thông tin sinh viên");
+                    fillTable();
+                    clearForm();
+                }
+
+                stm.close();
+                con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public void updateStudent() {
+        String maSV = txtMaSV.getText();
+        String hoTen = txtHoTen.getText();
+        String email = txtEmail.getText();
+        String sdt = txtSDT.getText();
+        String diaChi = txtDiaChi.getText();
+        String hinh = pathImage;
+        boolean gioiTinh = rdoNam.isSelected();
+
+        if (checkNull()) {
+            if (!hoTen.matches("[a-zA-Z\\p{L}]+([\\s+a-zA-Z\\p{L}])*")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng không nhập số hay ký tự đặc biệt");
+                txtHoTen.requestFocus();
+                return;
+            }
+
+            if (!email.matches("\\w+@fpt.edu.vn")) {
+                JOptionPane.showMessageDialog(this, "Hệ thống chỉ nhận email của fpt");
+                txtEmail.requestFocus();
+                return;
+            }
+
+            if (!sdt.matches("\\d{10}")) {
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng kiểu số điện thoại (10 chữ số)");
+                txtSDT.requestFocus();
+                return;
+            }
+
+//            Student std = setStudent();
+//            if (stdDAO.themSV(std) > 0) {
+//                JOptionPane.showMessageDialog(this, "Lưu thành công");
+//                fillTable();
+//            }
+            if (!rdoNam.isSelected() && !rdoNu.isSelected()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn giới tính sinh viên");
+                return;
+            }
+
+            if (lblHinh.getIcon() == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn ảnh đại diện sinh viên");
+                return;
+            }
+
+            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn cập nhật thông tin sinh viên này không?");
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    Connection con = connectionDB.getConnection();
+                    String sql = "update students set hoten = ?, email = ?, sodt = ?, gioitinh = ?, diachi = ?, hinh = ? where masv = ?";
+                    PreparedStatement stm = con.prepareStatement(sql);
+
+                    stm.setString(7, maSV);
+                    stm.setString(1, hoTen);
+                    stm.setString(2, email);
+                    stm.setString(3, sdt);
+                    stm.setByte(4, (byte) (gioiTinh ? 1 : 0));
+                    stm.setString(5, diaChi);
+                    stm.setString(6, hinh);
+
+                    int rowEffect = stm.executeUpdate();
+
+                    if (rowEffect <= 0) {
+                        JOptionPane.showMessageDialog(this, "Mã sinh viên không tồn tại");
+                        txtMaSV.requestFocus();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Đã cập nhật thông tin sinh viên");
+                        fillTable();
+                        clearForm();
+                    }
+
+                    stm.close();
+                    con.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 
     /**
@@ -344,10 +554,20 @@ public class StudentManagement extends javax.swing.JFrame {
 
         btnDelete.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\delete.png")); // NOI18N
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnUpdate.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\edit.png")); // NOI18N
         btnUpdate.setText("Update");
         btnUpdate.setPreferredSize(new java.awt.Dimension(99, 39));
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         tblSinhVien.setBackground(new java.awt.Color(255, 255, 255));
         tblSinhVien.setModel(new javax.swing.table.DefaultTableModel(
@@ -503,6 +723,14 @@ public class StudentManagement extends javax.swing.JFrame {
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         fillTable();
     }//GEN-LAST:event_formWindowOpened
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        deleteStudent();
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        updateStudent();
+    }//GEN-LAST:event_btnUpdateActionPerformed
 
     /**
      * @param args the command line arguments
