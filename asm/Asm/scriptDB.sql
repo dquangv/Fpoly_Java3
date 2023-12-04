@@ -24,9 +24,9 @@ go
 
 create table grade (
 masv nvarchar(50),
-tienganh int,
-tinhoc int,
-gdtc int,
+tienganh float,
+tinhoc float,
+gdtc float,
 primary key (masv));
 go
 
@@ -55,4 +55,47 @@ go
 
 insert into grade values
 ('SV001', 7, 9, 8);
+go
+
+select *
+from grade
+where masv = (select masv 
+			from students 
+			where masv = 'SV001');
+go
+
+create trigger insert_diem_sv on grade
+for insert
+as
+	begin
+		declare @masv nvarchar(50);
+
+		select @masv = ins.masv
+		from inserted ins
+		left join students std
+		on std.masv = ins.masv;
+
+		if @masv is null
+		begin
+			raiserror(N'Mã sinh viên không tồn tại', 16, 1);
+			rollback transaction;
+		end
+	end
+go
+
+select s.masv, g.tienganh, g.tinhoc, g.gdtc, hoten
+from grade g
+right join students s
+on g.masv = s.masv
+where s.masv = 'sv002';
+go
+
+update grade
+set tienganh = 10, tinhoc = 10, gdtc = 10
+where masv = 'sv001';
+go
+
+select top 3 *, (tienganh + tinhoc + gdtc)/3 as dtb
+from grade
+order by dtb desc;
 go

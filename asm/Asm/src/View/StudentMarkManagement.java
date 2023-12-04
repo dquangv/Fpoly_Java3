@@ -4,13 +4,22 @@
  */
 package View;
 
+import DAO.ConnectionDB;
 import java.awt.Color;
+import javax.swing.JOptionPane;
+import java.sql.*;
+import java.text.DecimalFormat;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author Quang
  */
 public class StudentMarkManagement extends javax.swing.JFrame {
+
+    ConnectionDB connectionDB = new ConnectionDB();
+    DefaultTableModel tblModel;
+    int index = -1;
 
     /**
      * Creates new form StudentManagement
@@ -33,8 +42,311 @@ public class StudentMarkManagement extends javax.swing.JFrame {
         lblDTB.setText(null);
     }
 
+    public boolean checkNull() {
+        if (txtMaSV.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng search mã sinh viên cần cập nhật điểm");
+            txtMaSVSearch.requestFocus();
+            return false;
+        }
+
+        if (txtTA.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập điểm tiếng anh");
+            txtTA.requestFocus();
+            return false;
+        }
+
+        if (txtTinHoc.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập điểm tin học");
+            txtTinHoc.requestFocus();
+            return false;
+        }
+
+        if (txtGDTC.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập điểm giáo dục thể chất");
+            txtGDTC.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean checkValidate() {
+        if (!txtTA.getText().matches("\\d+")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số");
+            txtTA.requestFocus();
+            return false;
+        }
+
+        if (!txtTinHoc.getText().matches("\\d+")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số");
+            txtTinHoc.requestFocus();
+            return false;
+        }
+
+        if (!txtGDTC.getText().matches("\\d+")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số");
+            txtGDTC.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
     public void addMarkStudent() {
+        String diemTA = txtTA.getText();
+        String diemTin = txtTinHoc.getText();
+        String diemGDTC = txtGDTC.getText();
+        String maSV = txtMaSV.getText();
+
+        if (checkNull()) {
+            if (checkValidate()) {
+                try {
+                    Connection con = connectionDB.getConnection();
+                    String sql = "insert into grade values (?, ?, ?, ?)";
+                    PreparedStatement stm = con.prepareStatement(sql);
+
+                    stm.setString(1, maSV);
+                    stm.setFloat(2, Float.parseFloat(diemTA));
+                    stm.setFloat(3, Float.parseFloat(diemTin));
+                    stm.setFloat(4, Float.parseFloat(diemGDTC));
+
+                    stm.execute();
+                    JOptionPane.showMessageDialog(this, "Đã thêm điểm cho sinh viên");
+                    clearForm();
+
+                    stm.close();
+                    con.close();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Mã sinh viên này đã có điểm");
+                }
+            }
+        }
+    }
+
+    public void searchStudent() {
+        try {
+            Connection con = connectionDB.getConnection();
+            String sql = "select s.masv, g.tienganh, g.tinhoc, g.gdtc, hoten, (tienganh + tinhoc + gdtc) / 3 as dtb from grade g right join students s on g.masv = s.masv where s.masv = ?";
+            PreparedStatement stm = con.prepareStatement(sql);
+
+            stm.setString(1, txtMaSVSearch.getText());
+
+            ResultSet rs = stm.executeQuery();
+
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(this, "Mã sinh viên không tồn tại");
+                txtMaSVSearch.requestFocus();
+                clearForm();
+                return;
+            } else {
+                lblhoTen.setText(rs.getString(5));
+                txtMaSV.setText(rs.getString(1));
+
+                if (rs.getString(2) == null) {
+                    txtTA.setText(null);
+                    txtTinHoc.setText(null);
+                    txtGDTC.setText(null);
+                    lblDTB.setText(null);
+                } else {
+                    txtTA.setText(String.valueOf(rs.getInt(2)));
+                    txtTinHoc.setText(String.valueOf(rs.getInt(3)));
+                    txtGDTC.setText(String.valueOf(rs.getInt(4)));
+                    lblDTB.setText(new DecimalFormat("#.##").format(rs.getFloat(6)));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void deleteMarkStudent() {
+        if (txtMaSV.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng search mã sinh viên cần xoá");
+            txtMaSVSearch.requestFocus();
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xoá không?");
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                Connection con = connectionDB.getConnection();
+                String sql = "delete from grade where masv = ?";
+                PreparedStatement stm = con.prepareStatement(sql);
+
+                stm.setString(1, txtMaSV.getText());
+
+                stm.execute();
+
+                JOptionPane.showMessageDialog(this, "Đã xoá điểm của sinh viên này");
+                clearForm();
+
+                stm.close();
+                con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public void updateMarkStudent() {
+        if (checkNull()) {
+            if (checkValidate()) {
+                try {
+                    Connection con = connectionDB.getConnection();
+                    String sqlSearch = "select s.masv, g.tienganh, g.tinhoc, g.gdtc, hoten from grade g right join students s on g.masv = s.masv where s.masv = ?";
+                    PreparedStatement stmSearch = con.prepareStatement(sqlSearch);
+
+                    stmSearch.setString(1, txtMaSVSearch.getText());
+
+                    ResultSet rs = stmSearch.executeQuery();
+
+                    if (!rs.next()) {
+                        JOptionPane.showMessageDialog(this, "Mã sinh viên không tồn tại");
+                        txtMaSVSearch.requestFocus();
+                        return;
+                    } else {
+                        lblhoTen.setText(rs.getString(5));
+                        txtMaSV.setText(rs.getString(1));
+
+                        if (rs.getString(2) == null) {
+                            JOptionPane.showMessageDialog(this, "Sinh viên này chưa có điểm, vui lòng thêm trước khi cập nhật");
+                            clearForm();
+                            rs.close();
+                            stmSearch.close();
+                            con.close();
+                        } else {
+
+                            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn cập nhật không?");
+
+                            if (confirm == JOptionPane.YES_OPTION) {
+                                try {
+                                    String sql = "update grade set tienganh = ?, tinhoc = ?, gdtc = ? where masv = ?";
+                                    PreparedStatement stm = con.prepareStatement(sql);
+
+                                    stm.setInt(1, Integer.parseInt(txtTA.getText()));
+                                    stm.setInt(2, Integer.parseInt(txtTinHoc.getText()));
+                                    stm.setInt(3, Integer.parseInt(txtGDTC.getText()));
+                                    stm.setString(4, txtMaSV.getText());
+
+                                    stm.execute();
+
+                                    JOptionPane.showMessageDialog(this, "Đã cập nhật điểm sinh viên");
+                                    clearForm();
+
+                                    stm.close();
+                                    con.close();
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void fillTable() {
+        tblModel = (DefaultTableModel) tblMarkStudent.getModel();
+        tblModel.setRowCount(0);
+
+        try {
+            Connection con = connectionDB.getConnection();
+            String sql = "select top 3 g.*, (tienganh + tinhoc + gdtc)/3 as dtb, hoten from grade g join students s on g.masv = s.masv order by dtb desc";
+            Statement stm = con.createStatement();
+            ResultSet rs = stm.executeQuery(sql);
+
+            while (rs.next()) {
+                tblModel.addRow(new Object[]{rs.getString(1), rs.getString(6), rs.getInt(2), rs.getInt(3), rs.getInt(4), new DecimalFormat("#.##").format(rs.getFloat(5))});
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void showStudent() {
+        String selectedMaSV = (String) tblModel.getValueAt(index, 0);
+//        String selectedHoTen = (String) tblModel.getValueAt(index, 1);
+//        String selectedTA = (String) tblModel.getValueAt(index, 2);
+//        String selectedTin = (String) tblModel.getValueAt(index, 3);
+//        String selectedGDTC = (String) tblModel.getValueAt(index, 4);
+//        String selectedDTB = (String) tblModel.getValueAt(index, 5);
+
+        System.out.println(selectedMaSV);
+//        System.out.println(tblModel.getValueAt(index, 2));
+
+//        txtMaSV.setText(selectedMaSV);
+//        lblhoTen.setText(selectedHoTen);
+//        txtTA.setText(selectedTA);
+//        txtTinHoc.setText(selectedTin);
+//        txtGDTC.setText(selectedGDTC);
+//        lblDTB.setText(selectedDTB);
+        try {
+            Connection con = connectionDB.getConnection();
+            String sql = "select g.masv, hoten, tienganh, tinhoc, gdtc, (tienganh + tinhoc + gdtc) / 3 as dtb from grade g join students s on g.masv = s.masv where g.masv = ?";
+            PreparedStatement stm = con.prepareStatement(sql);
+
+            stm.setString(1, selectedMaSV);
+            ResultSet rs = stm.executeQuery();
+
+            while (rs.next()) {
+                txtMaSV.setText(rs.getString(1));
+                lblhoTen.setText(rs.getString(2));
+                txtTA.setText(rs.getString(3));
+                txtTinHoc.setText(rs.getString(4));
+                txtGDTC.setText(rs.getString(5));
+                lblDTB.setText(new DecimalFormat("#.##").format(rs.getFloat(6)));
+            }
+
+            rs.close();
+            stm.close();
+            con.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void selectStudent() {
+        index = tblMarkStudent.getSelectedRow();
+
+        tblMarkStudent.setRowSelectionInterval(index, index);
+
+        showStudent();
+    }
+
+    public void firstStudent() {
+        index = 0;
+        tblMarkStudent.setRowSelectionInterval(index, index);
+        showStudent();
+    }
+
+    public void lastStudent() {
+        index = tblModel.getRowCount() - 1;
+        tblMarkStudent.setRowSelectionInterval(index, index);
+        showStudent();
+    }
+
+    public void previousStudent() {
+        if (index <= 0) {
+            index = tblModel.getRowCount();
+        }
+
+        index -= 1;
+        tblMarkStudent.setRowSelectionInterval(index, index);
+        showStudent();
+    }
+    
+    public void nextStudent() {
+        if (index == tblModel.getRowCount() - 1) {
+            index = -1;
+        }
         
+        index += 1;
+        tblMarkStudent.setRowSelectionInterval(index, index);
+        showStudent();
     }
 
     /**
@@ -77,6 +389,11 @@ public class StudentMarkManagement extends javax.swing.JFrame {
         lblTop3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowActivated(java.awt.event.WindowEvent evt) {
+                formWindowActivated(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(0, 102, 255));
@@ -90,6 +407,11 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 
         btnSearch.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\search.png")); // NOI18N
         btnSearch.setText("Search");
+        btnSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -119,8 +441,9 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 
         jLabel4.setText("Mã SV:");
 
+        lblhoTen.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         lblhoTen.setForeground(new java.awt.Color(0, 51, 255));
-        lblhoTen.setText("jLabel5");
+        lblhoTen.setEnabled(false);
 
         jLabel6.setText("Tiếng anh:");
 
@@ -142,7 +465,6 @@ public class StudentMarkManagement extends javax.swing.JFrame {
         lblDTB.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblDTB.setForeground(new java.awt.Color(0, 51, 255));
         lblDTB.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblDTB.setText("jLabel10");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -228,17 +550,47 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 
         btnDelete.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\delete.png")); // NOI18N
         btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
+            }
+        });
 
         btnUpdate.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\edit.png")); // NOI18N
         btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
 
         btnFirst.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\rewind.png")); // NOI18N
+        btnFirst.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFirstActionPerformed(evt);
+            }
+        });
 
         btnPrevious.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\previous.png")); // NOI18N
+        btnPrevious.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPreviousActionPerformed(evt);
+            }
+        });
 
         btnNext.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\next.png")); // NOI18N
+        btnNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNextActionPerformed(evt);
+            }
+        });
 
         btnLast.setIcon(new javax.swing.ImageIcon("C:\\Users\\Quang\\OneDrive - FPT Polytechnic\\Desktop\\fpl\\hk3\\Java3\\icons\\fast_forward.png")); // NOI18N
+        btnLast.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLastActionPerformed(evt);
+            }
+        });
 
         tblMarkStudent.setBackground(new java.awt.Color(255, 255, 255));
         tblMarkStudent.setForeground(new java.awt.Color(0, 0, 0));
@@ -259,6 +611,11 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
+            }
+        });
+        tblMarkStudent.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblMarkStudentMouseClicked(evt);
             }
         });
         jScrollPane1.setViewportView(tblMarkStudent);
@@ -345,7 +702,46 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         addMarkStudent();
+        fillTable();
     }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        searchStudent();
+    }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        deleteMarkStudent();
+        fillTable();
+    }//GEN-LAST:event_btnDeleteActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        updateMarkStudent();
+        fillTable();
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
+        fillTable();
+    }//GEN-LAST:event_formWindowActivated
+
+    private void tblMarkStudentMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMarkStudentMouseClicked
+        selectStudent();
+    }//GEN-LAST:event_tblMarkStudentMouseClicked
+
+    private void btnFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFirstActionPerformed
+        firstStudent();
+    }//GEN-LAST:event_btnFirstActionPerformed
+
+    private void btnLastActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLastActionPerformed
+        lastStudent();
+    }//GEN-LAST:event_btnLastActionPerformed
+
+    private void btnPreviousActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviousActionPerformed
+        previousStudent();
+    }//GEN-LAST:event_btnPreviousActionPerformed
+
+    private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+        nextStudent();
+    }//GEN-LAST:event_btnNextActionPerformed
 
     /**
      * @param args the command line arguments
