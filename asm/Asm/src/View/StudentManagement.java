@@ -333,6 +333,13 @@ public class StudentManagement extends javax.swing.JFrame {
 
     public void deleteStudent() {
         String maSV = txtMaSV.getText();
+        
+        if (maSV.equals("")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã sinh viên muốn xoá");
+            txtMaSV.requestFocus();
+            return;
+        }
+        
         int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xoá sinh viên này không?");
 
         if (confirm == JOptionPane.YES_OPTION) {

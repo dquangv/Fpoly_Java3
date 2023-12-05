@@ -71,19 +71,19 @@ public class StudentMarkManagement extends javax.swing.JFrame {
     }
 
     public boolean checkValidate() {
-        if (!txtTA.getText().matches("\\d+")) {
+        if (!txtTA.getText().matches("\\d+(.\\d+)*")) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số");
             txtTA.requestFocus();
             return false;
         }
 
-        if (!txtTinHoc.getText().matches("\\d+")) {
+        if (!txtTinHoc.getText().matches("\\d+(.\\d+)*")) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số");
             txtTinHoc.requestFocus();
             return false;
         }
 
-        if (!txtGDTC.getText().matches("\\d+")) {
+        if (!txtGDTC.getText().matches("\\d+(.\\d+)*")) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đúng định dạng số");
             txtGDTC.requestFocus();
             return false;
@@ -113,6 +113,7 @@ public class StudentMarkManagement extends javax.swing.JFrame {
                     stm.execute();
                     JOptionPane.showMessageDialog(this, "Đã thêm điểm cho sinh viên");
                     clearForm();
+                    index = -1;
 
                     stm.close();
                     con.close();
@@ -176,10 +177,17 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 
                 stm.setString(1, txtMaSV.getText());
 
-                stm.execute();
+                int rowEffect = stm.executeUpdate();
 
-                JOptionPane.showMessageDialog(this, "Đã xoá điểm của sinh viên này");
+                if (rowEffect == 0) {
+                    JOptionPane.showMessageDialog(this, "Mã sinh viên này chưa có điểm");
+                    txtMaSVSearch.requestFocus();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Đã xoá điểm của sinh viên này");
+                }
+                
                 clearForm();
+                index = -1;
 
                 stm.close();
                 con.close();
@@ -197,7 +205,7 @@ public class StudentMarkManagement extends javax.swing.JFrame {
                     String sqlSearch = "select s.masv, g.tienganh, g.tinhoc, g.gdtc, hoten from grade g right join students s on g.masv = s.masv where s.masv = ?";
                     PreparedStatement stmSearch = con.prepareStatement(sqlSearch);
 
-                    stmSearch.setString(1, txtMaSVSearch.getText());
+                    stmSearch.setString(1, txtMaSV.getText());
 
                     ResultSet rs = stmSearch.executeQuery();
 
@@ -224,9 +232,9 @@ public class StudentMarkManagement extends javax.swing.JFrame {
                                     String sql = "update grade set tienganh = ?, tinhoc = ?, gdtc = ? where masv = ?";
                                     PreparedStatement stm = con.prepareStatement(sql);
 
-                                    stm.setInt(1, Integer.parseInt(txtTA.getText()));
-                                    stm.setInt(2, Integer.parseInt(txtTinHoc.getText()));
-                                    stm.setInt(3, Integer.parseInt(txtGDTC.getText()));
+                                    stm.setFloat(1, Float.parseFloat(txtTA.getText()));
+                                    stm.setFloat(2, Float.parseFloat(txtTinHoc.getText()));
+                                    stm.setFloat(3, Float.parseFloat(txtGDTC.getText()));
                                     stm.setString(4, txtMaSV.getText());
 
                                     stm.execute();
@@ -260,7 +268,7 @@ public class StudentMarkManagement extends javax.swing.JFrame {
             ResultSet rs = stm.executeQuery(sql);
 
             while (rs.next()) {
-                tblModel.addRow(new Object[]{rs.getString(1), rs.getString(6), rs.getInt(2), rs.getInt(3), rs.getInt(4), new DecimalFormat("#.##").format(rs.getFloat(5))});
+                tblModel.addRow(new Object[]{rs.getString(1), rs.getString(6), rs.getFloat(2), rs.getFloat(3), rs.getFloat(4), new DecimalFormat("#.##").format(rs.getFloat(5))});
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -275,7 +283,6 @@ public class StudentMarkManagement extends javax.swing.JFrame {
 //        String selectedGDTC = (String) tblModel.getValueAt(index, 4);
 //        String selectedDTB = (String) tblModel.getValueAt(index, 5);
 
-        System.out.println(selectedMaSV);
 //        System.out.println(tblModel.getValueAt(index, 2));
 
 //        txtMaSV.setText(selectedMaSV);
@@ -295,9 +302,9 @@ public class StudentMarkManagement extends javax.swing.JFrame {
             while (rs.next()) {
                 txtMaSV.setText(rs.getString(1));
                 lblhoTen.setText(rs.getString(2));
-                txtTA.setText(rs.getString(3));
-                txtTinHoc.setText(rs.getString(4));
-                txtGDTC.setText(rs.getString(5));
+                txtTA.setText(String.valueOf(rs.getFloat(3)));
+                txtTinHoc.setText(String.valueOf(rs.getFloat(4)));
+                txtGDTC.setText(String.valueOf(rs.getFloat(5)));
                 lblDTB.setText(new DecimalFormat("#.##").format(rs.getFloat(6)));
             }
 
@@ -318,18 +325,30 @@ public class StudentMarkManagement extends javax.swing.JFrame {
     }
 
     public void firstStudent() {
+        if (tblModel.getRowCount() == 0) {
+            return;
+        }
+
         index = 0;
         tblMarkStudent.setRowSelectionInterval(index, index);
         showStudent();
     }
 
     public void lastStudent() {
+        if (tblModel.getRowCount() == 0) {
+            return;
+        }
+
         index = tblModel.getRowCount() - 1;
         tblMarkStudent.setRowSelectionInterval(index, index);
         showStudent();
     }
 
     public void previousStudent() {
+        if (tblModel.getRowCount() == 0) {
+            return;
+        }
+
         if (index <= 0) {
             index = tblModel.getRowCount();
         }
@@ -338,12 +357,16 @@ public class StudentMarkManagement extends javax.swing.JFrame {
         tblMarkStudent.setRowSelectionInterval(index, index);
         showStudent();
     }
-    
+
     public void nextStudent() {
+        if (tblModel.getRowCount() == 0) {
+            return;
+        }
+
         if (index == tblModel.getRowCount() - 1) {
             index = -1;
         }
-        
+
         index += 1;
         tblMarkStudent.setRowSelectionInterval(index, index);
         showStudent();
