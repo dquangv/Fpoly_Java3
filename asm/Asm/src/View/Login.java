@@ -40,6 +40,7 @@ public class Login extends javax.swing.JFrame {
 
 	public void hi(){
 		System.out.println("Hi");
+System.out.println("Hi");
 	}
 
     public void login() {
