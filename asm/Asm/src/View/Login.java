@@ -38,6 +38,10 @@ public class Login extends javax.swing.JFrame {
         return true;
     }
 
+	public void hi(){
+		System.out.println("Hi");
+	}
+
     public void login() {
         if (checkNull()) {
             String username = txtUsername.getText();
